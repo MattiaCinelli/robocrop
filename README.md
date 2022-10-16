@@ -6,7 +6,15 @@ Clone and install the package
 ```bash
 pip install -e .
 ```
-Try this code to test the code.
+
+
+## Version 1
+<img src="commons\RobocropV1.svg" width=300 height=256 align='right'>
+To succeed the algorithm has to 
+Plow -> Seed -> Water -> Harvest
+
+Try this code to test it:
+
 ```python
 import gym
 import numpy as np
@@ -32,15 +40,11 @@ for rep in range(3):
             print(f"Failed after {i} steps.")
             break
 ```
-## Version 1
-<img src="commons\RobocropV1.svg" width=300 height=256 align='right'>
-To succeed the algorithm has to 
-Plow -> Seed -> Water -> Harvest
 
 
 
 ## Version 1.1
-<img src="commons\RobocropV1.1.svg" width=450 height=256 align='right'>
+<img src="commons\RobocropV1.1.svg" width=550 height=256 align='right'>
 To succeed the algorithm has to 
 Plow -> Seed -> Water -> Water -> Harvest
 <!-- 
