@@ -70,7 +70,7 @@ class RoboCropEnvV1(gym.Env):
 
     metadata = {'render.modes': ['human']}
 
-    def __init__(self, max_episode_steps=2000):
+    def __init__(self, max_episode_steps=200):
         super(RoboCropEnvV1, self).__init__()
         self.action_space = spaces.Discrete(4)
         self.observation_space = spaces.Discrete(5)
@@ -79,9 +79,13 @@ class RoboCropEnvV1(gym.Env):
         self.episode_steps = 0
 
     def get_reward(self, action):
-        if self.state == self.UNPLOWED and action == self.PLOW:
-            self.state = self.PLOWED
-            return 1
+        if action == self.PLOW:
+            if self.state == self.UNPLOWED:
+                self.state = self.PLOWED
+                return 1
+            else:
+                self.state = self.PLOWED
+                return -1
         elif self.state == self.PLOWED and action == self.SEED:
             self.state = self.SEEDED
             return 1
@@ -110,7 +114,7 @@ class RoboCropEnvV1(gym.Env):
     
     def reset(self):
         # Start as plowed
-        self.state = 0
+        self.state = self.PLOWED
         self.episode_steps = 0
         return self.state
 
