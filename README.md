@@ -3,7 +3,7 @@
 A gym-like environment to simulate robot planting and harvesting crop and to test different RL algorithms.
 
 ## Version 1
-<img src="robocrop\commons\RobocropV1.svg" width=125 height=128 align='right'>
+<img src="commons\RobocropV1.svg" width=125 height=128 align='right'>
 To succeed the algorithm has to 
 Plow -> Seed -> Water -> Harvest
 
