@@ -29,4 +29,3 @@ def test_get_reward_invalid_action():
     with pytest.raises(AssertionError):
         env.step(4)
 
-

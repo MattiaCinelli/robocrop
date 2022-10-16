@@ -106,18 +106,12 @@ class RoboCropEnvV1(gym.Env):
         self.episode_steps += 1
         info = {}
         return self.state, reward, done, info
-        # return self.state.astype(np.int), reward, done, info
-        # return np.array([self.state]).astype(np.int32), reward, done, info
-        # return self.state.astype(np.float32), reward, done, info
-        
+
     
     def reset(self):
-        # super().reset()
         # Start as plowed
         self.state = 0
-        # here we convert to float32 to make it more general (in case we want to use continuous actions)
-        # return np.array([self.state]).astype(np.int32)
-        # return self.astype(np.int)
+        self.episode_steps = 0
         return self.state
 
     def render(self, mode='human'):
