@@ -16,21 +16,40 @@ pip install -e .
 
 ## Version 1
 <img src="commons\RobocropV1.svg" width=300 height=256 align='centre'>
-To succeed the algorithm has to 
-Plow -> Seed -> Water -> Harvest
 
-## Under Construction
-### Version 1.1
-<img src="commons\RobocropV1.1.svg" width=550 height=256 align='centre'>
-To succeed the algorithm has to 
-Plow -> Seed -> Water -> Water -> Harvest
+To succeed the algorithm has to perform the actions:
+```
+Plow -> Seed -> Water -> Harvest
+```
+Corresponding to the states:
+```
+Unplowed -> Plowed -> Seeded -> Mature
+```
+
 
 
 ### Version 2
-Observation:
-Between 0 and 3: Empty, Seeded, Small plant, Ready for harvest
-Soil moisture: Between 0 - 100. 100 for each watering, decrease 25 point every step
+<img src="commons\RobocropV1.1.svg" width=550 height=256 align='centre'>
 
-Observation:
-Between 0 and 3: Empty, Seeded, Small plant, Ready for harvest
-Soil moisture: Between 0 - 100. 100 for each watering, decrease 25 point every step
+To succeed the algorithm has to perform the actions:
+```
+Plow -> Seed -> Water -> Water -> Harvest
+```
+Corresponding to the states:
+```
+Unplowed -> Plowed -> Seeded -> Growing -> Mature
+```
+
+## Under Construction
+### Version 3
+
+To succeed the algorithm has to perform the actions:
+```
+Plow -> Seed -> Water (morning) -> No nothing util ->  Water (morning) -> Harvest
+```
+Corresponding to the states:
+```
+Unplowed -> Plowed -> Seeded -> Growing -> Mature
+```
+
+We add the observation of the state time (morning, afternoon, night), the score is higher if plats are watered in the morning.
