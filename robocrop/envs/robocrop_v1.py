@@ -73,7 +73,7 @@ class RoboCropEnvV1(gym.Env):
     def __init__(self, max_episode_steps=200):
         super(RoboCropEnvV1, self).__init__()
         self.action_space = spaces.Discrete(4)
-        self.observation_space = spaces.Discrete(5)
+        self.observation_space = spaces.Box(low=np.array([0]), high=np.array([4]), dtype=np.int32)
         self.state = 0
         self.max_episode_steps = max_episode_steps
         self.episode_steps = 0
@@ -106,8 +106,9 @@ class RoboCropEnvV1(gym.Env):
         reward = self.get_reward(action)
 
         # Reward given action
-        done = self.episode_steps >= self.max_episode_steps
         self.episode_steps += 1
+        done = self.episode_steps >= self.max_episode_steps
+
         info = {}
         return self.state, reward, done, info
 

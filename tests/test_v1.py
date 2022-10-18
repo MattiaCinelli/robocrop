@@ -14,7 +14,7 @@ def does_not_raise():
 
 def test_get_reward_steps():
     '''
-    Tests for create_directory
+    Test if the result of reset and step is correct
     '''
     assert env.reset() == 0
     assert env.step(0) == (1, 1, False, {})
