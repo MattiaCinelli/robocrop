@@ -11,7 +11,7 @@ pip install -e .
 
 
 ## Version 1
-<img src="commons\RobocropV1.svg" width=300 height=256 align='right'>
+<img src="commons\RobocropV1.svg" width=300 height=256 align='centre'>
 To succeed the algorithm has to 
 Plow -> Seed -> Water -> Harvest
 
@@ -19,7 +19,7 @@ Try this code to test it:
 
 
 ## Version 1.1
-<img src="commons\RobocropV1.1.svg" width=550 height=256 align='right'>
+<img src="commons\RobocropV1.1.svg" width=550 height=256 align='centre'>
 To succeed the algorithm has to 
 Plow -> Seed -> Water -> Water -> Harvest
 
