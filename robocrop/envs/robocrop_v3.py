@@ -11,7 +11,7 @@ from gym import logger, spaces
 from gym.error import DependencyNotInstalled
 
 
-class RoboCropEnvV2(gym.Env):
+class RoboCropEnvV3(gym.Env):
     """
     ### Description
     This environment simulate a simple farming crop robot.
@@ -53,15 +53,16 @@ class RoboCropEnvV2(gym.Env):
 
     ### Arguments
     ```
-    gym.make('RoboCrop-v2')
+    gym.make('RoboCrop-v3')
     ```
     No additional arguments are currently supported.
     """
     # Possible actions
-    PLOW = 0
-    SEED = 1
-    WATER = 2
-    HARVEST = 3
+    NONE = 0
+    PLOW = 1
+    SEED = 2
+    WATER = 3
+    HARVEST = 4
     # Possible states
     UNPLOWED = 0
     PLOWED  = 1
@@ -72,38 +73,45 @@ class RoboCropEnvV2(gym.Env):
 
     metadata = {'render.modes': ['human']}
 
-    def __init__(self, max_episode_steps=200):
-        super(RoboCropEnvV2, self).__init__()
+    def __init__(self, max_episode_steps=500):
+        super(RoboCropEnvV3, self).__init__()
         self.action_space = spaces.Discrete(4)
-        self.observation_space = spaces.Box(low=np.array([0]), high=np.array([4]), dtype=np.int32)
+        self.observation_space = spaces.Box(low=np.array([0, 0]), high=np.array([4, 24]), dtype=np.int32)
+        # self.observation_space = spaces.Dict({
+        #     "soil": spaces.Box(low=np.array([0]), high=np.array([4]), dtype=np.int32), 
+        #     "time": spaces.Discrete(3)}) 
         self.state = 0
         self.max_episode_steps = max_episode_steps
         self.episode_steps = 0
 
-    def get_reward(self, action):
-        if action == self.PLOW:
+    def get_reward(self, action, soil, time):
+        if action == self.NONE:
+            self.state = (soil, time+1)
+            return 0
+        elif action == self.PLOW:
             if self.state == self.UNPLOWED:
-                self.state = self.PLOWED
+                self.state = (self.PLOWED, time+1)
                 return 1
             else:
-                self.state = self.PLOWED
+                self.state = (self.PLOWED, time+1)
                 return -1
         elif self.state == self.PLOWED and action == self.SEED:
-            self.state = self.SEEDED
+            self.state = (self.SEEDED, time+1)
             return 1
         elif action == self.WATER:
             if self.state == self.GROWING:
-                self.state = self.MATURE
+                self.state = (self.MATURE, time+1)
                 return 1
             elif self.state == self.SEEDED:
-                self.state = self.GROWING
+                self.state = (self.GROWING, time+1)
                 return 1
             else:
                 return -1
         elif self.state == self.MATURE and action == self.HARVEST:
-            self.state = self.UNPLOWED
+            self.state = (self.UNPLOWED, time+1)
             return 10
         else:
+            self.state = (soil, time+1)
             return -1
 
     def step(self, action):
@@ -111,14 +119,15 @@ class RoboCropEnvV2(gym.Env):
         assert self.action_space.contains(action), err_msg
         assert self.observation_space is not None, "Call reset before using step method."
         # Observation given action and state
-        reward = self.get_reward(action)
+        soil, time = self.state
+        reward = self.get_reward(action, soil, time)
 
         # Reward given action
         self.episode_steps += 1
         done = self.episode_steps >= self.max_episode_steps
-
         info = {}
-        return self.state, reward, done, info
+
+        return np.array(self.state, dtype=np.int32), reward, done, info
 
     
     def reset(self):
