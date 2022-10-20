@@ -31,14 +31,18 @@ class RoboCropEnvV3(gym.Env):
     
     ### Observation Space
     The observation is a `ndarray` with shape `(1,)` with the values corresponding to the following attributes:
-    | Num | Observation      |
-    |-----|------------------|
-    | 0   | Ground Unplowed  |
+    | Num | Observation      | Min | Max |
+    |-----|------------------|-----|-----|
+    | 0   | Ground Conditions| 0   | 4   |
+    | 1   | Time in hours    | 0   | 23  |
+    | 2   | Soil humidity    | 0   | 1   |
+    
+    #### Ground Conditions
+    | 0   | Ground Unplowed 
     | 1   | Ground Plowed    |
     | 2   | Seed planted     |
     | 3   | Plant is growing |
     | 4   | Plant is mature  |
-    
 
     ### Rewards
     The goal is to harvest a full size crop. The reward is 10, -1 for any other action.
@@ -70,69 +74,77 @@ class RoboCropEnvV3(gym.Env):
     GROWING = 3
     MATURE  = 4
     
-
     metadata = {'render.modes': ['human']}
 
     def __init__(self, max_episode_steps=500):
         super(RoboCropEnvV3, self).__init__()
         self.action_space = spaces.Discrete(4)
-        self.observation_space = spaces.Box(low=np.array([0, 0]), high=np.array([4, 24]), dtype=np.int32)
+        self.observation_space = spaces.Box(low=np.array([0, 0, 0]), high=np.array([4, 23, 1]), dtype=np.int32)
         # self.observation_space = spaces.Dict({
         #     "soil": spaces.Box(low=np.array([0]), high=np.array([4]), dtype=np.int32), 
         #     "time": spaces.Discrete(3)}) 
+        self.optimal_irrigation_time = 9
         self.state = 0
         self.max_episode_steps = max_episode_steps
         self.episode_steps = 0
 
     def get_reward(self, action, soil, time):
         if action == self.NONE:
-            self.state = (soil, time+1)
             return 0
         elif action == self.PLOW:
-            if self.state == self.UNPLOWED:
-                self.state = (self.PLOWED, time+1)
+            if soil == self.UNPLOWED:
+                soil = self.PLOWED
                 return 1
             else:
-                self.state = (self.PLOWED, time+1)
+                soil = self.PLOWED
                 return -1
-        elif self.state == self.PLOWED and action == self.SEED:
-            self.state = (self.SEEDED, time+1)
+        elif soil == self.PLOWED and action == self.SEED:
+            soil = self.SEEDED
             return 1
         elif action == self.WATER:
-            if self.state == self.GROWING:
-                self.state = (self.MATURE, time+1)
+            if soil == self.GROWING:
+                soil = self.MATURE
                 return 1
-            elif self.state == self.SEEDED:
-                self.state = (self.GROWING, time+1)
+            elif soil == self.SEEDED:
+                soil = self.GROWING
                 return 1
             else:
                 return -1
-        elif self.state == self.MATURE and action == self.HARVEST:
-            self.state = (self.UNPLOWED, time+1)
-            return 10
+        elif soil == self.MATURE and action == self.HARVEST:
+            return self.UNPLOWED, 10
+
         else:
-            self.state = (soil, time+1)
             return -1
+
+    def _get_reward_multiplier(self, time):
+        return 1-min(abs(time-self.optimal_irrigation_time), 24-abs(time-self.optimal_irrigation_time))/12
+
+    def _get_time(self, time, action):
+        return time+4 if action == self.PLOW else time+1
 
     def step(self, action):
         err_msg = f"{action!r} ({type(action)}) invalid"
         assert self.action_space.contains(action), err_msg
         assert self.observation_space is not None, "Call reset before using step method."
-        # Observation given action and state
-        soil, time = self.state
-        reward = self.get_reward(action, soil, time)
 
-        # Reward given action
+        # Observation given action and state
+        soil_state, time, soil_h20 = self.state
+        reward_multiplier = self._get_reward_multiplier(time)
+        reward = self.get_reward(action, soil_state, reward_multiplier, soil_h20)
+        new_time = self._get_time(time, action)
+
+
+        # Episode progress
         self.episode_steps += 1
         done = self.episode_steps >= self.max_episode_steps
         info = {}
 
-        return np.array(self.state, dtype=np.int32), reward, done, info
+        return np.array([soil_state, new_time, soil_h20], dtype=np.int32), reward, done, info
 
     
     def reset(self):
         # Start as plowed
-        self.state = self.PLOWED
+        self.state = np.array((self.PLOWED, 0, 0), dtype=np.int32)
         self.episode_steps = 0
         return self.state
 

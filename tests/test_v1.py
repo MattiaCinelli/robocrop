@@ -1,5 +1,4 @@
 from contextlib import contextmanager
-import os
 import pytest
 
 from robocrop.envs.robocrop_v1 import RoboCropEnvV1
