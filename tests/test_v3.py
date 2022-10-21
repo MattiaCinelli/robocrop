@@ -26,6 +26,8 @@ def test_get_time():
     assert env._get_time(0, 2) == 1
     assert env._get_time(0, 3) == 1
     assert env._get_time(0, 4) == 1
+    assert env._get_time(23, 0) == 0
+    assert env._get_time(23, 1) == 3
 
 def test_get_reward_multiplier():
     env.reset()
@@ -39,6 +41,15 @@ def test_get_reward_multiplier():
     assert env._get_reward_multiplier(21) == 0.0
 
 
+def test_get_obs():
+    env.reset()
+    assert env._get_obs(0, 0, 1, 0) == (0, 0, 0)
+    assert env._get_obs(0, 1, 1, 0) == (1, 0, 0)
+    assert env._get_obs(0, 2, 1, 0) == (2, 0, 0)
+    assert env._get_obs(0, 3, 1, 0) == (3, 0, 0)
+    assert env._get_obs(0, 4, 1, 0) == (4, 0, 0)
+    assert env._get_obs(1, 0, 1, 0) == (1, 1, 0)
+    assert env._get_obs(1, 1, 1, 0) == (1, -1, 0)
 
 
 

@@ -73,6 +73,9 @@ class RoboCropEnvV3(gym.Env):
     SEEDED  = 2
     GROWING = 3
     MATURE  = 4
+
+    DRY = 0
+    WET = 1
     
     metadata = {'render.modes': ['human']}
 
@@ -80,47 +83,46 @@ class RoboCropEnvV3(gym.Env):
         super(RoboCropEnvV3, self).__init__()
         self.action_space = spaces.Discrete(4)
         self.observation_space = spaces.Box(low=np.array([0, 0, 0]), high=np.array([4, 23, 1]), dtype=np.int32)
-        # self.observation_space = spaces.Dict({
-        #     "soil": spaces.Box(low=np.array([0]), high=np.array([4]), dtype=np.int32), 
-        #     "time": spaces.Discrete(3)}) 
         self.optimal_irrigation_time = 9
         self.state = 0
         self.max_episode_steps = max_episode_steps
         self.episode_steps = 0
 
-    def get_reward(self, action, soil, time):
+    def _get_obs(self, action, soil_state, reward_multiplier, soil_h20): # Returns soil_state, reward, soil_h20
         if action == self.NONE:
-            return 0
+            return soil_state, 0, soil_h20
+
         elif action == self.PLOW:
-            if soil == self.UNPLOWED:
-                soil = self.PLOWED
-                return 1
+            if soil_state == self.UNPLOWED:
+                return self.PLOWED, 1, self.DRY
             else:
-                soil = self.PLOWED
-                return -1
-        elif soil == self.PLOWED and action == self.SEED:
-            soil = self.SEEDED
-            return 1
+                return self.PLOWED, -1, self.DRY
+
+        elif soil_state == self.PLOWED and action == self.SEED:
+            return self.SEEDED, 1, self.DRY
+
         elif action == self.WATER:
-            if soil == self.GROWING:
-                soil = self.MATURE
-                return 1
-            elif soil == self.SEEDED:
-                soil = self.GROWING
-                return 1
-            else:
+            if soil_h20 != self.DRY:
                 return -1
-        elif soil == self.MATURE and action == self.HARVEST:
-            return self.UNPLOWED, 10
+            if soil_state == self.GROWING:
+                return self.MATURE, 1*reward_multiplier, self.WET
+            elif soil_state == self.SEEDED:
+                return self.GROWING, 1*reward_multiplier, self.WET
+            else:
+                return soil_state, -1, self.WET
+        
+        elif soil_state == self.MATURE and action == self.HARVEST:
+            return self.UNPLOWED, 10*reward_multiplier, self.DRY
 
         else:
-            return -1
+            return soil_state, -1, soil_h20
 
     def _get_reward_multiplier(self, time):
         return 1-min(abs(time-self.optimal_irrigation_time), 24-abs(time-self.optimal_irrigation_time))/12
 
     def _get_time(self, time, action):
-        return time+4 if action == self.PLOW else time+1
+        time += 4 if action == self.PLOW else 1
+        return time if time<23 else time-24
 
     def step(self, action):
         err_msg = f"{action!r} ({type(action)}) invalid"
@@ -130,8 +132,9 @@ class RoboCropEnvV3(gym.Env):
         # Observation given action and state
         soil_state, time, soil_h20 = self.state
         reward_multiplier = self._get_reward_multiplier(time)
-        reward = self.get_reward(action, soil_state, reward_multiplier, soil_h20)
+        soil_state, reward, soil_h20 = self._get_obs(action, soil_state, reward_multiplier, soil_h20)
         new_time = self._get_time(time, action)
+        soil_h20 = 0 if time == 0 else soil_h20 # reset soil_h20 to dry at midnight
 
 
         # Episode progress
