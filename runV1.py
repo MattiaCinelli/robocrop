@@ -1,5 +1,6 @@
 #%%
-import gym
+# !pip install gymnasium
+import gymnasium as gym
 import numpy as np
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Flatten
@@ -44,4 +45,3 @@ print(np.mean(scores.history['episode_reward']))
 # %%
 _ = dqn.test(env, nb_episodes=10, visualize=True)
 # %%
-g

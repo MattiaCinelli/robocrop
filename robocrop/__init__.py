@@ -1,4 +1,4 @@
-from gym.envs.registration import register
+from gymnasium.envs.registration import register
 
 register(
     id='RoboCrop-v1',
@@ -13,4 +13,9 @@ register(
 register(
     id='RoboCrop-v3',
     entry_point='robocrop.envs:RoboCropEnvV3'
+)
+
+register(
+    id='RoboCrop-v4',
+    entry_point='robocrop.envs:RoboCropEnvV4'
 )

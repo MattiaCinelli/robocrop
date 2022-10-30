@@ -6,9 +6,9 @@ from typing import Optional, Union
 
 import numpy as np
 
-import gym
-from gym import logger, spaces
-from gym.error import DependencyNotInstalled
+import gymnasium as gym
+from gymnasium import logger, spaces
+from gymnasium.error import DependencyNotInstalled
 
 
 class RoboCropEnvV3(gym.Env):
@@ -67,6 +67,7 @@ class RoboCropEnvV3(gym.Env):
     SEED = 2
     WATER = 3
     HARVEST = 4
+
     # Possible states
     UNPLOWED = 0
     PLOWED  = 1
@@ -84,7 +85,7 @@ class RoboCropEnvV3(gym.Env):
         self.action_space = spaces.Discrete(4)
         self.observation_space = spaces.Box(low=np.array([0, 0, 0]), high=np.array([4, 23, 1]), dtype=np.int32)
         self.optimal_irrigation_time = 9
-        self.state = 0
+        self.state = np.array((self.PLOWED, 0, 0), dtype=np.int32)
         self.max_episode_steps = max_episode_steps
         self.episode_steps = 0
 
@@ -103,7 +104,7 @@ class RoboCropEnvV3(gym.Env):
 
         elif action == self.WATER:
             if soil_h20 != self.DRY:
-                return -1
+                return soil_state, -1, self.WET
             if soil_state == self.GROWING:
                 return self.MATURE, 1*reward_multiplier, self.WET
             elif soil_state == self.SEEDED:
@@ -122,7 +123,7 @@ class RoboCropEnvV3(gym.Env):
 
     def _get_time(self, time, action):
         time += 4 if action == self.PLOW else 1
-        return time if time<23 else time-24
+        return time if time<=23 else time-24
 
     def step(self, action):
         err_msg = f"{action!r} ({type(action)}) invalid"
@@ -135,14 +136,14 @@ class RoboCropEnvV3(gym.Env):
         soil_state, reward, soil_h20 = self._get_obs(action, soil_state, reward_multiplier, soil_h20)
         new_time = self._get_time(time, action)
         soil_h20 = 0 if time == 0 else soil_h20 # reset soil_h20 to dry at midnight
-
+        self.state = np.array((soil_state, new_time, soil_h20), dtype=np.int32)
 
         # Episode progress
         self.episode_steps += 1
         done = self.episode_steps >= self.max_episode_steps
         info = {}
 
-        return np.array([soil_state, new_time, soil_h20], dtype=np.int32), reward, done, info
+        return self.state, reward, done, info
 
     
     def reset(self):

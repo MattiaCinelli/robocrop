@@ -51,7 +51,14 @@ def test_get_obs():
     assert env._get_obs(1, 0, 1, 0) == (1, 1, 0)
     assert env._get_obs(1, 1, 1, 0) == (1, -1, 0)
 
+def equal_tuples(t1, t2):
+    return all(np.array_equal(x, y) for x, y in zip(t1, t2))
 
+def test_step():
+    env.reset()
+    assert equal_tuples(env.step(0), (np.array([1, 1, 0], dtype=np.int32), 0, False, {}))
+    assert equal_tuples(env.step(1), (np.array([1, 4, 0], dtype=np.int32), -1, False, {}))
+    
 
 
 

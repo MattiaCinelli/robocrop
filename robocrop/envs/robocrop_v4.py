@@ -5,13 +5,15 @@ import math
 from typing import Optional, Union
 
 import numpy as np
+from ..logs import logging
 
-import gymnasium as gym
+import gym
+import gymnasium
 from gymnasium import logger, spaces
 from gymnasium.error import DependencyNotInstalled
 
 
-class RoboCropEnvV2(gym.Env):
+class RoboCropEnvV4(gym.Env):
     """
     ### Description
     This environment simulate a simple farming crop robot.
@@ -62,6 +64,7 @@ class RoboCropEnvV2(gym.Env):
     SEED = 1
     WATER = 2
     HARVEST = 3
+
     # Possible states
     UNPLOWED = 0
     PLOWED  = 1
@@ -73,59 +76,66 @@ class RoboCropEnvV2(gym.Env):
     metadata = {'render.modes': ['human']}
 
     def __init__(self, max_episode_steps=200):
-        super(RoboCropEnvV2, self).__init__()
-        self.action_space = spaces.Discrete(4)
-        self.observation_space = spaces.Box(low=np.array([0]), high=np.array([4]), dtype=np.int32)
-        self.state = 0
+        super(RoboCropEnvV4, self).__init__()
+        # self.action_space = spaces.Box(low=np.array([0, 0]), high=np.array([4, 4]), dtype=np.int32)
+        self.action_space = spaces.MultiDiscrete(np.array([4, 4]))
+        self.observation_space = spaces.Box(low=np.array([0, 0]), high=np.array([4, 4]), dtype=np.int32)
+
+        self.states = np.array([self.PLOWED, self.PLOWED], dtype=np.int32)
         self.max_episode_steps = max_episode_steps
         self.episode_steps = 0
 
-    def get_reward(self, action):
-        if action == self.PLOW:
-            if self.state == self.UNPLOWED:
-                self.state = self.PLOWED
-                return 1
-            else:
-                self.state = self.PLOWED
-                return -1
-        elif self.state == self.PLOWED and action == self.SEED:
-            self.state = self.SEEDED
-            return 1
-        elif action == self.WATER:
-            if self.state == self.GROWING:
-                self.state = self.MATURE
-                return 1
-            elif self.state == self.SEEDED:
-                self.state = self.GROWING
-                return 1
-            else:
-                return -1
-        elif self.state == self.MATURE and action == self.HARVEST:
-            self.state = self.UNPLOWED
-            return 10
-        else:
-            return -1
+        self.logger = logging.getLogger(__name__)
+        self.logger.info("Starting RoboCropEnvV4")
 
-    def step(self, action):
-        err_msg = f"{action!r} ({type(action)}) invalid"
-        assert self.action_space.contains(action), err_msg
+    def get_reward(self, action, state):
+        if action == self.PLOW:
+            return (1, self.PLOWED) if state == self.UNPLOWED else (-1, self.PLOWED)
+        elif state == self.PLOWED and action == self.SEED:
+            return 1, self.SEEDED
+        elif action == self.WATER:
+            if state == self.GROWING:
+                return 1, self.MATURE
+            elif state == self.SEEDED:
+                return 1, self.GROWING
+            else:
+                return -1, state
+        elif state == self.MATURE and action == self.HARVEST:
+            return 10, self.UNPLOWED
+        else:
+            return -1, state
+
+    def step(self, actions):
+        self.logger.debug(f"actions: {actions}")
+        err_msg = f"{actions!r} ({type(actions)}) invalid"
+        assert self.action_space.contains(actions), err_msg
         assert self.observation_space is not None, "Call reset before using step method."
         # Observation given action and state
-        reward = self.get_reward(action)
+        reward = 0
+        new_states = []
+        for a, s in enumerate(self.states):
+            reward, new_state = self.get_reward(actions[a], s)
+            reward += reward
+            new_states.append(new_state)
+        new_states = np.array(new_states, dtype=np.int32)
 
         # Reward given action
         self.episode_steps += 1
         done = self.episode_steps >= self.max_episode_steps
-
+        
         info = {}
-        return self.state, reward, done, info
+        self.logger.debug(f"new_states: {new_states}, reward: {reward}, done: {done}, info: {info}")
+        # return self.action_space.sample(), 1, False, {}
+        return new_states, reward, done, info
 
     
     def reset(self):
         # Start as plowed
-        self.state = self.PLOWED
         self.episode_steps = 0
-        return self.state
+        self.max_episode_steps = 200
+        # self.states = np.array([self.PLOWED, self.PLOWED], dtype=np.int32)
+        self.states = np.array([self.PLOWED], dtype=np.int32)
+        return self.states
 
     def render(self, mode='human'):
         pass
