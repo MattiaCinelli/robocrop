@@ -5,11 +5,11 @@ import math
 from typing import Optional, Union
 
 import numpy as np
-
+import copy
 import gymnasium as gym
 from gymnasium import logger, spaces
 from gymnasium.error import DependencyNotInstalled
-
+from gym.utils import seeding
 
 class RoboCropEnvV1(gym.Env):
     """
@@ -57,27 +57,27 @@ class RoboCropEnvV1(gym.Env):
     No additional arguments are currently supported.
     """
     # Possible actions
-    PLOW = 0
-    SEED = 1
-    WATER = 2
-    HARVEST = 3
+    PLOW = np.array([0], dtype=np.int32)
+    SEED = np.array([1], dtype=np.int32)
+    WATER = np.array([2], dtype=np.int32)
+    HARVEST = np.array([3], dtype=np.int32)
     # Possible states
-    UNPLOWED = 0
-    PLOWED = 1
-    SEEDED = 2
-    MATURE = 3
+    UNPLOWED = np.array([0], dtype=np.int32)
+    PLOWED = np.array([1], dtype=np.int32)
+    SEEDED = np.array([2], dtype=np.int32)
+    MATURE = np.array([3], dtype=np.int32)
     
 
-    metadata = {'render.modes': ['human']}
+    metadata = {'render_modes': ['human']}
 
     def __init__(self, max_episode_steps=200):
         super(RoboCropEnvV1, self).__init__()
         self.action_space = spaces.Discrete(4)
         self.observation_space = spaces.Box(low=np.array([0]), high=np.array([4]), dtype=np.int32)
-        self.state = 0
+        self.state = np.array([0], dtype=np.int32)
         self.max_episode_steps = max_episode_steps
         self.episode_steps = 0
-
+  
     def get_reward(self, action):
         if action == self.PLOW:
             if self.state == self.UNPLOWED:
@@ -110,14 +110,19 @@ class RoboCropEnvV1(gym.Env):
         done = self.episode_steps >= self.max_episode_steps
 
         info = {}
-        return self.state, reward, done, info
+        return self.state, reward, done, False,  info
 
-    
-    def reset(self):
+    def reset(
+            self, 
+            seed: Optional[int] = None, 
+            options: Optional[dict] = None,):
+        if options is None:
+            options = {}
         # Start as plowed
-        self.state = self.PLOWED
+        super().reset(seed=seed)
+        self.state = self.PLOW
         self.episode_steps = 0
-        return self.state
+        return (self.state, options)
 
     def render(self, mode='human'):
         pass
