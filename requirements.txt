@@ -1,0 +1,8 @@
+pytest
+gymnasium
+rich
+ipykernel
+keras-rl2
+# docker pull tensorflow/tensorflow:latest
+gym
+icecream
