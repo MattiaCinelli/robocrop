@@ -1,15 +1,10 @@
 """
 
 """
-import math
-from typing import Optional, Union
-
 import numpy as np
 
 import gymnasium as gym
-from gymnasium import logger, spaces
-from gymnasium.error import DependencyNotInstalled
-
+from gymnasium import spaces
 
 class RoboCropEnvV1(gym.Env):
     """
@@ -113,7 +108,7 @@ class RoboCropEnvV1(gym.Env):
         return self.state, reward, done, info
 
     
-    def reset(self):
+    def reset(self, **kwargs):
         # Start as plowed
         self.state = self.PLOWED
         self.episode_steps = 0
