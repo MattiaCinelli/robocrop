@@ -57,15 +57,15 @@ class RoboCropEnvV1(gym.Env):
     No additional arguments are currently supported.
     """
     # Possible actions
-    PLOW = np.array([0], dtype=np.int32)
-    SEED = np.array([1], dtype=np.int32)
-    WATER = np.array([2], dtype=np.int32)
-    HARVEST = np.array([3], dtype=np.int32)
+    PLOW = 0# np.array([0], dtype=np.int32)
+    SEED = 1# np.array([1], dtype=np.int32)
+    WATER = 2# np.array([2], dtype=np.int32)
+    HARVEST = 3# np.array([3], dtype=np.int32)
     # Possible states
-    UNPLOWED = np.array([0], dtype=np.int32)
-    PLOWED = np.array([1], dtype=np.int32)
-    SEEDED = np.array([2], dtype=np.int32)
-    MATURE = np.array([3], dtype=np.int32)
+    UNPLOWED = 0# np.array([0], dtype=np.int32)
+    PLOWED = 1# np.array([1], dtype=np.int32)
+    SEEDED = 2# np.array([2], dtype=np.int32)
+    MATURE = 3# np.array([3], dtype=np.int32)
     
 
     metadata = {'render_modes': ['human']}
@@ -74,7 +74,7 @@ class RoboCropEnvV1(gym.Env):
         super(RoboCropEnvV1, self).__init__()
         self.action_space = spaces.Discrete(4)
         self.observation_space = spaces.Box(low=np.array([0]), high=np.array([4]), dtype=np.int32)
-        self.state = np.array([0], dtype=np.int32)
+        self.state = 0 # np.array([0], dtype=np.int32)
         self.max_episode_steps = max_episode_steps
         self.episode_steps = 0
   
@@ -110,19 +110,22 @@ class RoboCropEnvV1(gym.Env):
         done = self.episode_steps >= self.max_episode_steps
 
         info = {}
-        return self.state, reward, done, False,  info
+        # return self.state, reward, done, False, info
+        return self.state, reward, done, info
 
     def reset(
             self, 
             seed: Optional[int] = None, 
-            options: Optional[dict] = None,):
+            options: Optional[dict] = None,
+            ):
         if options is None:
             options = {}
         # Start as plowed
         super().reset(seed=seed)
         self.state = self.PLOW
         self.episode_steps = 0
-        return (self.state, options)
+        # return (self.state, options)
+        return self.state
 
     def render(self, mode='human'):
         pass
