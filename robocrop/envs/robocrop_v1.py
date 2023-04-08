@@ -1,9 +1,6 @@
 """
 
 """
-import math
-from typing import Optional, Union
-
 import numpy as np
 import copy
 import gymnasium as gym
@@ -112,6 +109,7 @@ class RoboCropEnvV1(gym.Env):
         info = {}
         # return self.state, reward, done, False, info
         return self.state, reward, done, info
+
 
     def reset(
             self, 
