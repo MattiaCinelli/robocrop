@@ -1,12 +1,12 @@
+# %%
+import gym
+env = gym.make("robocrop.envs:RoboCrop-v2")
 #%%
-# !pip install gymnasium
-import gymnasium as gym
+
 import numpy as np
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense, Flatten
+from tensorflow.keras.layers import Dense
 from tensorflow.keras.optimizers import Adam 
-# %%
-env = gym.make("robocrop.envs:RoboCrop-v1")
 # %%
 # Create a Deep Learning Model with Keras
 def build_model(states, actions):
@@ -16,7 +16,6 @@ def build_model(states, actions):
     model.add(Dense(actions, activation='linear'))
     return model
 
-env = gym.make("robocrop.envs:RoboCrop-v1")
 states = env.observation_space.shape
 actions = env.action_space.n
 states, actions
