@@ -15,7 +15,7 @@ INSTALL_REQUIRES = [
 setup(
     name = 'robocrop',
     packages = find_packages(),
-    version = '0.1.0',
+    version = '0.2.0',
     description = 'A gym-like environment to simulate robot planting and harvesting crop and to test different RL algorithms.',
     long_description_content_type = 'text/markdown',
     long_description = long_description,

@@ -1,40 +1,20 @@
 """
 
 """
+# %%
 import numpy as np
-import copy
 import gymnasium as gym
 from gymnasium import logger, spaces
-from gymnasium.error import DependencyNotInstalled
-from gym.utils import seeding
+from typing import Optional
+from common import Farm
 
-class RoboCropEnvV1(gym.Env):
+# %%
+class RoboCropEnvV1(Farm, gym.Env):
     """
     ### Description
     This environment simulate a simple farming crop robot.
     
     The ground has to be seeded, watered and the crop has to be harvested in order to get a reward.
-
-    ### Action Space
-    The action is a `ndarray` with shape `(4,)` which can take values `{0, 3}` indicating the direction
-     of the fixed force the cart is pushed with.
-    | Num | Action     |
-    |-----|------------|
-    | 0   | Plow       |
-    | 1   | Seed       |
-    | 2   | Water      |
-    | 3   | Harvest    |
-
-    
-    ### Observation Space
-    The observation is a `ndarray` with shape `(1,)` with the values corresponding to the following attributes:
-    | Num | Observation      |
-    |-----|------------------|
-    | 0   | Ground Unplowed  |
-    | 1   | Ground Plowed    |
-    | 2   | Seed planted     |
-    | 3   | Plant is mature  |
-    
 
     ### Rewards
     The goal is to harvest a full size crop. The reward is 10, -1 for any other action.
@@ -53,28 +33,18 @@ class RoboCropEnvV1(gym.Env):
     ```
     No additional arguments are currently supported.
     """
-    # Possible actions
-    PLOW = 0# np.array([0], dtype=np.int32)
-    SEED = 1# np.array([1], dtype=np.int32)
-    WATER = 2# np.array([2], dtype=np.int32)
-    HARVEST = 3# np.array([3], dtype=np.int32)
-    # Possible states
-    UNPLOWED = 0# np.array([0], dtype=np.int32)
-    PLOWED = 1# np.array([1], dtype=np.int32)
-    SEEDED = 2# np.array([2], dtype=np.int32)
-    MATURE = 3# np.array([3], dtype=np.int32)
     
-
-    metadata = {'render_modes': ['human']}
-
     def __init__(self, max_episode_steps=200):
         super(RoboCropEnvV1, self).__init__()
         self.action_space = spaces.Discrete(4)
         self.observation_space = spaces.Box(low=np.array([0]), high=np.array([4]), dtype=np.int32)
-        self.state = 0 # np.array([0], dtype=np.int32)
+        self.state = np.array([0], dtype=np.int32)
         self.max_episode_steps = max_episode_steps
         self.episode_steps = 0
-  
+        self.state_hystory = []
+        self.action_hystory = []
+
+
     def get_reward(self, action):
         if action == self.PLOW:
             if self.state == self.UNPLOWED:
@@ -95,21 +65,6 @@ class RoboCropEnvV1(gym.Env):
         else:
             return -1
 
-    def step(self, action):
-        err_msg = f"{action!r} ({type(action)}) invalid"
-        assert self.action_space.contains(action), err_msg
-        assert self.observation_space is not None, "Call reset before using step method."
-        # Observation given action and state
-        reward = self.get_reward(action)
-
-        # Reward given action
-        self.episode_steps += 1
-        done = self.episode_steps >= self.max_episode_steps
-
-        info = {}
-        # return self.state, reward, done, False, info
-        return self.state, reward, done, info
-
 
     def reset(
             self, 
@@ -122,11 +77,20 @@ class RoboCropEnvV1(gym.Env):
         super().reset(seed=seed)
         self.state = self.PLOW
         self.episode_steps = 0
-        # return (self.state, options)
-        return self.state
+        self.state_hystory = []
+        self.action_hystory = []
+        self.lastaction = None
+        return (self.state, options)
 
-    def render(self, mode='human'):
-        pass
 
+    def render(self, render_mode='text'):
+        self._render_text()
+
+
+    def _render_text(self):
+        self.state_hystory.extend(self.state)
+        self.action_hystory.append(self.lastaction)
+
+    
     def close(self):
         pass

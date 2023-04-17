@@ -5,9 +5,9 @@ import numpy as np
 
 import gymnasium as gym
 from gymnasium import spaces
+from common import Farm
 
-
-class RoboCropEnvV4(gym.Env):
+class RoboCropEnvV4(Farm, gym.Env):
     """
     ### Description
     This environment simulate a simple farming crop robot.
@@ -94,20 +94,6 @@ class RoboCropEnvV4(gym.Env):
             return 10
         else:
             return -1
-
-    def step(self, action):
-        err_msg = f"{action!r} ({type(action)}) invalid"
-        assert self.action_space.contains(action), err_msg
-        assert self.observation_space is not None, "Call reset before using step method."
-        # Observation given action and state
-        reward = self.get_reward(action)
-
-        # Reward given action
-        self.episode_steps += 1
-        done = self.episode_steps >= self.max_episode_steps
-
-        info = {}
-        return self.state, reward, done, info
 
     
     def reset(self):

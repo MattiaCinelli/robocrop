@@ -2,7 +2,7 @@
 CURRENT_DIR := $(shell basename "$(PWD)")
 
 # Define the name of the virtual environment
-VENV_NAME := .$(CURRENT_DIR)_venv
+VENV_NAME := .venv_$(CURRENT_DIR)
 
 # Define the path to the Python executable
 PYTHON := python3
