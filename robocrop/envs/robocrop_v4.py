@@ -5,7 +5,7 @@ import numpy as np
 
 import gymnasium as gym
 from gymnasium import spaces
-from common import Farm
+from robocrop.common import Farm
 
 class RoboCropEnvV4(Farm, gym.Env):
     """

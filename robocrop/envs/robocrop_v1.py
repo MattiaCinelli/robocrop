@@ -1,14 +1,13 @@
 """
-
+First example of a farm game that RoboCrop needs to solve.
 """
-# %%
 import numpy as np
 import gymnasium as gym
-from gymnasium import logger, spaces
+from gymnasium import spaces
 from typing import Optional
-from common import Farm
+from robocrop.common import Farm
+from robocrop.logs import logging
 
-# %%
 class RoboCropEnvV1(Farm, gym.Env):
     """
     ### Description
@@ -33,7 +32,8 @@ class RoboCropEnvV1(Farm, gym.Env):
     ```
     No additional arguments are currently supported.
     """
-    
+    logger = logging.getLogger("RC1")
+
     def __init__(self, max_episode_steps=200):
         super(RoboCropEnvV1, self).__init__()
         self.action_space = spaces.Discrete(4)
@@ -43,27 +43,31 @@ class RoboCropEnvV1(Farm, gym.Env):
         self.episode_steps = 0
         self.state_hystory = []
         self.action_hystory = []
+        self._warn_double_wrap = False
 
 
     def get_reward(self, action):
+        self.logger.debug(f'action: {int(action)}')
+        # If the action is PLOW, the field is plown removing everything.
+        # Basically resetting the field
         if action == self.PLOW:
             if self.state == self.UNPLOWED:
                 self.state = self.PLOWED
-                return 1
+                return self.REWARD
             else:
                 self.state = self.PLOWED
-                return -1
+                return self.PENALTY
         elif self.state == self.PLOWED and action == self.SEED:
             self.state = self.SEEDED
-            return 1
+            return self.REWARD
         elif self.state == self.SEEDED and action == self.WATER:
             self.state = self.MATURE
-            return 1
+            return self.REWARD
         elif self.state == self.MATURE and action == self.HARVEST:
             self.state = self.UNPLOWED
-            return 10
+            return self.FINAL_REWARD
         else:
-            return -1
+            return self.PENALTY
 
 
     def reset(

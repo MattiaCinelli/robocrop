@@ -9,7 +9,7 @@ import numpy as np
 import gymnasium as gym
 from gymnasium import logger, spaces
 from gymnasium.error import DependencyNotInstalled
-from common import Farm
+from robocrop.common import Farm
 
 class RoboCropEnvV2(Farm, gym.Env):
     """

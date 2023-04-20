@@ -37,10 +37,15 @@ class Farm:
     SEEDED: np.ndarray = np.array([2], dtype=np.int32)
     MATURE: np.ndarray = np.array([3], dtype=np.int32)
 
+    REWARD: int = 1
+    PENALTY: int = -1
+    FINAL_REWARD: int = 10
+
     def step(self, action):
         err_msg = f"{action!r} ({type(action)}) invalid"
-        assert self.action_space.contains(action), err_msg
+        assert self.action_space.contains(int(action)), err_msg
         assert self.observation_space is not None, "Call reset before using step method."
+        self.logger.debug(f'action: {action}')
         self.lastaction = int(action)
         # Observation given action and state
         reward = self.get_reward(action)
@@ -55,14 +60,13 @@ class Farm:
     
 """
     # Possible actions
-    PLOW: 0
-    SEED: 1
-    WATER: 2
-    HARVEST: 3
+    PLOW: int=0 # np.ndarray = np.array([0], dtype=np.int32)
+    SEED: int=1 #np.ndarray = np.array([1], dtype=np.int32)
+    WATER: int=2 #np.ndarray = np.array([2], dtype=np.int32)
+    HARVEST: int=3 #np.ndarray = np.array([3], dtype=np.int32)
     # Possible states
-    UNPLOWED: 0
-    PLOWED: 1
-    SEEDED: 2
-    GROWING: 3
-    MATURE: 4
+    UNPLOWED: int=0 #np.ndarray = np.array([0], dtype=np.int32)
+    PLOWED: int=1 #np.ndarray = np.array([1], dtype=np.int32)
+    SEEDED: int=2 #np.ndarray = np.array([2], dtype=np.int32)
+    MATURE: int=3 #np.ndarray = np.array([3], dtype=np.int32)
 """
