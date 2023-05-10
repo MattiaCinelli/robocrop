@@ -66,5 +66,3 @@ print(np.mean(scores.history['episode_reward']))
 # %%
 _ = dqn.test(env, nb_episodes=10, visualize=True)
 # %%
-# """
-# %%

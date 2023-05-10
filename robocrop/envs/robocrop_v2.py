@@ -1,15 +1,12 @@
 """
-
+Slight more complex example of a farm game that RoboCrop needs to solve.
 """
-import math
-from typing import Optional, Union
-
 import numpy as np
-
 import gymnasium as gym
-from gymnasium import logger, spaces
-from gymnasium.error import DependencyNotInstalled
+from typing import Optional
+from gymnasium import spaces
 from robocrop.common import Farm
+from robocrop.logs import logging
 
 class RoboCropEnvV2(Farm, gym.Env):
     """
@@ -17,28 +14,6 @@ class RoboCropEnvV2(Farm, gym.Env):
     This environment simulate a simple farming crop robot.
     
     The ground has to be seeded, watered and the crop has to be harvested in order to get a reward.
-
-    ### Action Space
-    The action is a `ndarray` with shape `(4,)` which can take values `{0, 3}` indicating the direction
-     of the fixed force the cart is pushed with.
-    | Num | Action     |
-    |-----|------------|
-    | 0   | Plow       |
-    | 1   | Seed       |
-    | 2   | Water      |
-    | 3   | Harvest    |
-
-    
-    ### Observation Space
-    The observation is a `ndarray` with shape `(1,)` with the values corresponding to the following attributes:
-    | Num | Observation      |
-    |-----|------------------|
-    | 0   | Ground Unplowed  |
-    | 1   | Ground Plowed    |
-    | 2   | Seed planted     |
-    | 3   | Plant is growing |
-    | 4   | Plant is mature  |
-    
 
     ### Rewards
     The goal is to harvest a full size crop. The reward is 10, -1 for any other action.
@@ -58,51 +33,74 @@ class RoboCropEnvV2(Farm, gym.Env):
     No additional arguments are currently supported.
     """    
 
-    metadata = {'render.modes': ['human']}
+    logger = logging.getLogger("RCv2")
 
     def __init__(self, max_episode_steps=200):
         super(RoboCropEnvV2, self).__init__()
         self.action_space = spaces.Discrete(4)
         self.observation_space = spaces.Box(low=np.array([0]), high=np.array([4]), dtype=np.int32)
-        self.state = 0
+        self.state = np.array([0], dtype=np.int32)
         self.max_episode_steps = max_episode_steps
         self.episode_steps = 0
+        self.state_hystory = []
+        self.action_hystory = []
+        self._warn_double_wrap = False
 
     def get_reward(self, action):
+        self.logger.debug(f'action: {int(action)}')
+        # If the action is PLOW, the field is plown removing everything.
+        # Basically resetting the field
         if action == self.PLOW:
             if self.state == self.UNPLOWED:
                 self.state = self.PLOWED
-                return 1
+                return self.REWARD
             else:
                 self.state = self.PLOWED
-                return -1
+                return self.PENALTY
         elif self.state == self.PLOWED and action == self.SEED:
             self.state = self.SEEDED
-            return 1
+            return self.REWARD
         elif action == self.WATER:
             if self.state == self.GROWING:
                 self.state = self.MATURE
-                return 1
+                return self.REWARD
             elif self.state == self.SEEDED:
                 self.state = self.GROWING
-                return 1
+                return self.REWARD
             else:
-                return -1
+                return self.PENALTY
         elif self.state == self.MATURE and action == self.HARVEST:
             self.state = self.UNPLOWED
-            return 10
+            done = True
+            return self.FINAL_REWARD
         else:
-            return -1
+            return self.PENALTY
 
     
-    def reset(self):
+    def reset(
+            self, 
+            seed: Optional[int] = None, 
+            options: Optional[dict] = None,
+            ):
+        if options is None:
+            options = {}
         # Start as plowed
-        self.state = self.PLOWED
+        super().reset(seed=seed)
+        self.state = self.PLOW
         self.episode_steps = 0
-        return self.state
+        self.state_hystory = []
+        self.action_hystory = []
+        self.lastaction = None
+        return (self.state, options)
 
-    def render(self, mode='human'):
-        pass
+
+    def render(self, render_mode='text'):
+        self._render_text()
+
+
+    def _render_text(self):
+        self.state_hystory.extend(self.state)
+        self.action_hystory.append(self.lastaction)
 
     def close(self):
         pass

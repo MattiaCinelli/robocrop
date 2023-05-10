@@ -32,12 +32,14 @@ class RoboCropEnvV1(Farm, gym.Env):
     ```
     No additional arguments are currently supported.
     """
-    logger = logging.getLogger("RC1")
+    logger = logging.getLogger("RCv1")
 
     def __init__(self, max_episode_steps=200):
         super(RoboCropEnvV1, self).__init__()
         self.action_space = spaces.Discrete(4)
-        self.observation_space = spaces.Box(low=np.array([0]), high=np.array([4]), dtype=np.int32)
+        self.observation_space = spaces.Box(
+            low=np.array([0]), high=np.array([4]), 
+            dtype=np.int32)
         self.state = np.array([0], dtype=np.int32)
         self.max_episode_steps = max_episode_steps
         self.episode_steps = 0
@@ -65,6 +67,7 @@ class RoboCropEnvV1(Farm, gym.Env):
             return self.REWARD
         elif self.state == self.MATURE and action == self.HARVEST:
             self.state = self.UNPLOWED
+            done = True
             return self.FINAL_REWARD
         else:
             return self.PENALTY

@@ -53,20 +53,6 @@ class RoboCropEnvV4(Farm, gym.Env):
     ```
     No additional arguments are currently supported.
     """
-    # Possible actions
-    PLOW = 0
-    SEED = 1
-    WATER = 2
-    HARVEST = 3
-    # Possible states
-    UNPLOWED = 0
-    PLOWED = 1
-    SEEDED = 2
-    MATURE = 3
-    
-
-    metadata = {'render.modes': ['human']}
-
     def __init__(self, max_episode_steps=200):
         super(RoboCropEnvV4, self).__init__()
         self.action_space = spaces.Discrete(4)

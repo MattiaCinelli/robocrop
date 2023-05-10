@@ -31,11 +31,16 @@ class Farm:
     SEED: np.ndarray = np.array([1], dtype=np.int32)
     WATER: np.ndarray = np.array([2], dtype=np.int32)
     HARVEST: np.ndarray = np.array([3], dtype=np.int32)
+    NONE: np.ndarray = np.array([4], dtype=np.int32)
     # Possible states
     UNPLOWED: np.ndarray = np.array([0], dtype=np.int32)
     PLOWED: np.ndarray = np.array([1], dtype=np.int32)
     SEEDED: np.ndarray = np.array([2], dtype=np.int32)
     MATURE: np.ndarray = np.array([3], dtype=np.int32)
+    GROWING: np.ndarray = np.array([4], dtype=np.int32)
+
+    DRY = np.ndarray = np.array([0], dtype=np.int32)
+    WET = np.ndarray = np.array([1], dtype=np.int32)
 
     REWARD: int = 1
     PENALTY: int = -1
@@ -52,21 +57,11 @@ class Farm:
 
         # Reward given action
         self.episode_steps += 1
-        done = self.episode_steps >= self.max_episode_steps
+        if reward == self.FINAL_REWARD:
+            done = True
+        else:
+            done = self.episode_steps >= self.max_episode_steps
 
         info = {}
         return self.state, reward, done, False, info
 
-    
-"""
-    # Possible actions
-    PLOW: int=0 # np.ndarray = np.array([0], dtype=np.int32)
-    SEED: int=1 #np.ndarray = np.array([1], dtype=np.int32)
-    WATER: int=2 #np.ndarray = np.array([2], dtype=np.int32)
-    HARVEST: int=3 #np.ndarray = np.array([3], dtype=np.int32)
-    # Possible states
-    UNPLOWED: int=0 #np.ndarray = np.array([0], dtype=np.int32)
-    PLOWED: int=1 #np.ndarray = np.array([1], dtype=np.int32)
-    SEEDED: int=2 #np.ndarray = np.array([2], dtype=np.int32)
-    MATURE: int=3 #np.ndarray = np.array([3], dtype=np.int32)
-"""

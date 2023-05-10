@@ -1,17 +1,14 @@
 """
 
 """
-import math
-from typing import Optional, Union
-
 import numpy as np
-
 import gymnasium as gym
-from gymnasium import logger, spaces
-from gymnasium.error import DependencyNotInstalled
+from gymnasium import spaces
+from robocrop.common import Farm
+from robocrop.logs import logging
 
 
-class RoboCropEnvV3(gym.Env):
+class RoboCropEnvV3(Farm, gym.Env):
     """
     ### Description
     This environment simulate a simple farming crop robot.
@@ -61,29 +58,14 @@ class RoboCropEnvV3(gym.Env):
     ```
     No additional arguments are currently supported.
     """
-    # Possible actions
-    NONE = 0
-    PLOW = 1
-    SEED = 2
-    WATER = 3
-    HARVEST = 4
-
-    # Possible states
-    UNPLOWED = 0
-    PLOWED  = 1
-    SEEDED  = 2
-    GROWING = 3
-    MATURE  = 4
-
-    DRY = 0
-    WET = 1
-    
-    metadata = {'render.modes': ['human']}
+    logger = logging.getLogger("RCv3")
 
     def __init__(self, max_episode_steps=500):
         super(RoboCropEnvV3, self).__init__()
         self.action_space = spaces.Discrete(4)
-        self.observation_space = spaces.Box(low=np.array([0, 0, 0]), high=np.array([4, 23, 1]), dtype=np.int32)
+        self.observation_space = spaces.Box(
+            low=np.array([0, 0, 0]), 
+            high=np.array([4, 23, 1]), dtype=np.int32)
         self.optimal_irrigation_time = 9
         self.state = np.array((self.PLOWED, 0, 0), dtype=np.int32)
         self.max_episode_steps = max_episode_steps
@@ -95,28 +77,29 @@ class RoboCropEnvV3(gym.Env):
 
         elif action == self.PLOW:
             if soil_state == self.UNPLOWED:
-                return self.PLOWED, 1, self.DRY
+                return self.PLOWED, self.REWARD, self.DRY
             else:
-                return self.PLOWED, -1, self.DRY
+                return self.PLOWED, self.PENALTY, self.DRY
 
         elif soil_state == self.PLOWED and action == self.SEED:
-            return self.SEEDED, 1, self.DRY
+            return self.SEEDED, self.REWARD, self.DRY
 
         elif action == self.WATER:
             if soil_h20 != self.DRY:
-                return soil_state, -1, self.WET
+                return soil_state, self.PENALTY, self.WET
             if soil_state == self.GROWING:
-                return self.MATURE, 1*reward_multiplier, self.WET
+                return self.MATURE, self.REWARD * reward_multiplier, self.WET
             elif soil_state == self.SEEDED:
-                return self.GROWING, 1*reward_multiplier, self.WET
+                return self.GROWING, self.REWARD * reward_multiplier, self.WET
             else:
-                return soil_state, -1, self.WET
-        
+                return soil_state, self.PENALTY, self.WET
+            
         elif soil_state == self.MATURE and action == self.HARVEST:
-            return self.UNPLOWED, 10*reward_multiplier, self.DRY
+            done = True
+            return self.UNPLOWED, self.FINAL_REWARD * reward_multiplier, self.DRY
 
         else:
-            return soil_state, -1, soil_h20
+            return soil_state, self.PENALTY, soil_h20
 
     def _get_reward_multiplier(self, time):
         return 1-min(abs(time-self.optimal_irrigation_time), 24-abs(time-self.optimal_irrigation_time))/12
@@ -127,7 +110,7 @@ class RoboCropEnvV3(gym.Env):
 
     def step(self, action):
         err_msg = f"{action!r} ({type(action)}) invalid"
-        assert self.action_space.contains(action), err_msg
+        assert self.action_space.contains(int(action)), err_msg
         assert self.observation_space is not None, "Call reset before using step method."
 
         # Observation given action and state
@@ -140,10 +123,13 @@ class RoboCropEnvV3(gym.Env):
 
         # Episode progress
         self.episode_steps += 1
-        done = self.episode_steps >= self.max_episode_steps
-        info = {}
+        if reward == self.FINAL_REWARD:
+            done = True
+        else:
+            done = self.episode_steps >= self.max_episode_steps
 
-        return self.state, reward, done, info
+        info = {}
+        return self.state, reward, done, False, info
 
     
     def reset(self):

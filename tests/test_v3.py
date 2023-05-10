@@ -1,67 +1,64 @@
-from contextlib import contextmanager
+from pyparsing import Any
 import pytest
 import numpy as np
+import gymnasium as gym
+from robocrop.common import Farm
+from contextlib import contextmanager
 
-from robocrop.envs.robocrop_v3 import RoboCropEnvV3
-
-# os.chdir(os.path.dirname(__file__) == 
-env = RoboCropEnvV3()
+# os.chdir(os.path.dirname(__file__))
+from stable_baselines3.common.monitor import Monitor
+# python3 -m pytest -v -p no:warnings
+# python3 -m pytest -v -s
 
 @contextmanager
 def does_not_raise():
     '''A context manager that does not raise an exception.'''
     yield
 
-def test_reset():
-    assert np.array_equal(env.reset(), np.array((1, 0, 0), dtype=np.int32))
-    assert env.episode_steps == 0
+@pytest.fixture
+def env():
+    'return the enviroment to be tested later'
+    return Monitor(gym.make("robocrop.envs:RoboCrop-v3"))
 
-def test_get_time():
-    '''
-    Test if the result of reset and step is correct
-    '''
-    env.reset()
-    assert env._get_time(0, 0) == 1
-    assert env._get_time(0, 1) == 4
-    assert env._get_time(0, 2) == 1
-    assert env._get_time(0, 3) == 1
-    assert env._get_time(0, 4) == 1
-    assert env._get_time(23, 0) == 0
-    assert env._get_time(23, 1) == 3
+@pytest.mark.filterwarnings("ignore:env") #but it doesn't work TODO
+def test_action_space(env: Any):
+    assert isinstance(env.action_space, gym.spaces.Discrete)
+    assert env.action_space.n == 4
 
-def test_get_reward_multiplier():
-    env.reset()
-    assert env._get_reward_multiplier(0) == 0.25
-    assert env._get_reward_multiplier(3) == 0.5
-    assert env._get_reward_multiplier(6) == 0.75
-    assert env._get_reward_multiplier(9) == 1.0
-    assert env._get_reward_multiplier(12) == 0.75
-    assert env._get_reward_multiplier(15) == 0.5
-    assert env._get_reward_multiplier(18) == 0.25
-    assert env._get_reward_multiplier(21) == 0.0
+def test_observation_space(env: Any):
+    assert isinstance(env.observation_space, gym.spaces.Box)
+    assert np.array_equal(env.observation_space.low, np.array([0]))
+    assert np.array_equal(env.observation_space.high, np.array([4]))
+    assert env.observation_space.dtype == np.int32
 
+def test_reset(env: Any):
+    state, options = env.reset()
+    assert np.array_equal(state, np.array([0]))
+    assert options == {}
 
-def test_get_obs():
-    env.reset()
-    assert env._get_obs(0, 0, 1, 0) == (0, 0, 0)
-    assert env._get_obs(0, 1, 1, 0) == (1, 0, 0)
-    assert env._get_obs(0, 2, 1, 0) == (2, 0, 0)
-    assert env._get_obs(0, 3, 1, 0) == (3, 0, 0)
-    assert env._get_obs(0, 4, 1, 0) == (4, 0, 0)
-    assert env._get_obs(1, 0, 1, 0) == (1, 1, 0)
-    assert env._get_obs(1, 1, 1, 0) == (1, -1, 0)
-
-def equal_tuples(t1, t2):
-    return all(np.array_equal(x, y) for x, y in zip(t1, t2))
-
-# def test_step():
+# def test_step(env: Any):
 #     env.reset()
-#     assert equal_tuples(env.step(0), (np.array([1, 1, 0], dtype=np.int32), 0, False, {}))
-#     assert equal_tuples(env.step(1), (np.array([1, 4, 0], dtype=np.int32), -1, False, {}))
-    
-
-
-
-
-
+#     # Test plow action
+#     state, reward, done, _, _ = env.step(env.PLOW)
+#     assert np.array_equal(state, np.array([1]))
+#     assert reward == 1
+#     assert state == env.PLOWED
+#     assert not done
+#     # Test seeding action
+#     state, reward, done, _, _ = env.step(env.SEED)
+#     assert np.array_equal(state, np.array([2]))
+#     assert reward == 1
+#     assert state == env.SEEDED
+#     assert not done
+#     # Test watering action
+#     state, reward, done, _, _ = env.step(env.WATER)
+#     assert np.array_equal(state, np.array([3]))
+#     assert reward == 1
+#     assert state == env.MATURE
+#     assert not done
+#     # Test harvest action
+#     state, reward, done, _, _ = env.step(env.HARVEST)
+#     assert np.array_equal(state, np.array([0]))
+#     assert reward == 10
+#     assert state == env.UNPLOWED
 
