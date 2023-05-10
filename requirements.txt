@@ -1,10 +1,11 @@
 pytest
-gym==0.21.0 # 0.26.2
-gymnasium==0.26.3
-tensorflow==1.12.0 # 2.3.0
+# gym==0.21.0 # 0.26.2
+gymnasium==0.27.1
+tensorflow>=2.11.1
 rich
 ipykernel
 keras-rl2
 # docker pull tensorflow/tensorflow:latest
 
 icecream
+stable_baselines3>=2.0.0
